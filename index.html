@@ -125,8 +125,8 @@
         "Push-Ups",
         "Abdominal Crunches",
       ];
-      const WORK_SECONDS = 30;
-      const REST_SECONDS = 10;
+      const WORK_SECONDS = 10;
+      const REST_SECONDS = 5;
 
       // Build a flat sequence of {type, label, next, seconds} steps: work, rest, work, rest, ... work.
       const sequence = [
@@ -161,6 +161,39 @@
       let stepIndex = 0;
       let secondsLeft = 0;
       let timerId = null;
+      let audioCtx = null;
+
+      function getAudioCtx() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioCtx;
+      }
+
+      function beep(freq, duration) {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "square";
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + duration,
+        );
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      }
+
+      function shortBeep() {
+        beep(660, 0.15);
+      }
+
+      function longBeep() {
+        beep(1320, 0.6);
+      }
 
       function renderStep() {
         const step = sequence[stepIndex];
@@ -173,18 +206,24 @@
 
       function tick() {
         secondsLeft--;
-        if (secondsLeft < 0) {
+        if (secondsLeft >= 1 && secondsLeft <= 3) {
+          shortBeep();
+        }
+        if (secondsLeft <= 0) {
           stepIndex++;
           if (stepIndex >= sequence.length) {
+            longBeep();
             finish();
             return;
           }
           secondsLeft = sequence[stepIndex].seconds;
+          longBeep();
         }
         renderStep();
       }
 
       function start() {
+        getAudioCtx();
         startScreen.style.display = "none";
         doneScreen.style.display = "none";
         workoutScreen.style.display = "flex";
