@@ -203,6 +203,25 @@
         beep(1320, 0.6);
       }
 
+      function speak(text) {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+      }
+
+      function announce(text) {
+        setTimeout(() => speak(text), 1000);
+      }
+
+      function stepAnnouncementText(step) {
+        return step.type === "rest"
+          ? "Get ready for " + step.next
+          : "Do now: " + step.label;
+      }
+
+      function announceStep(step) {
+        announce(stepAnnouncementText(step));
+      }
+
       function renderStep() {
         const step = sequence[stepIndex];
         phaseEl.textContent = step.type === "work" ? "Go" : "Rest";
@@ -221,11 +240,13 @@
           stepIndex++;
           if (stepIndex >= sequence.length) {
             longBeep();
+            announce("Good work!");
             finish();
             return;
           }
           secondsLeft = sequence[stepIndex].seconds;
           longBeep();
+          announceStep(sequence[stepIndex]);
         }
         renderStep();
       }
@@ -238,6 +259,9 @@
         stepIndex = 0;
         secondsLeft = sequence[0].seconds;
         renderStep();
+        // Spoken directly inside the click handler (not via announce()'s
+        // setTimeout) so it counts as part of the user gesture on mobile.
+        speak(stepAnnouncementText(sequence[0]));
         timerId = setInterval(tick, 1000);
       }
 
