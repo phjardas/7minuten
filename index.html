@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>7 Minuten</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #111;
+        color: #fff;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px
+          max(24px, env(safe-area-inset-bottom));
+        user-select: none;
+      }
+      #phase {
+        font-size: clamp(16px, 5vw, 22px);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 8px;
+      }
+      #phase.rest {
+        color: #ffb84d;
+      }
+      #phase.work {
+        color: #4dff88;
+      }
+      #exercise {
+        font-size: clamp(32px, 10vw, 56px);
+        font-weight: 700;
+        margin: 0 0 8px;
+      }
+      #next {
+        font-size: clamp(14px, 4vw, 18px);
+        opacity: 0.6;
+        min-height: 1.5em;
+        margin-bottom: 32px;
+      }
+      #time {
+        font-size: clamp(80px, 30vw, 160px);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      button {
+        margin-top: 40px;
+        padding: 18px 48px;
+        font-size: 20px;
+        font-weight: 600;
+        border: none;
+        border-radius: 999px;
+        background: #4dff88;
+        color: #111;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.97);
+      }
+      #start-screen,
+      #done-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #workout-screen {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+      }
+      h1 {
+        font-size: clamp(24px, 8vw, 36px);
+        margin-bottom: 0;
+      }
+      p.sub {
+        opacity: 0.6;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="start-screen">
+      <h1>7 Minuten</h1>
+      <p class="sub">4 exercises &middot; 30s work &middot; 10s rest</p>
+      <button id="start-btn">Start</button>
+    </div>
+
+    <div id="workout-screen">
+      <div id="phase"></div>
+      <div id="exercise"></div>
+      <div id="next"></div>
+      <div id="time"></div>
+    </div>
+
+    <div id="done-screen" style="display: none">
+      <h1>Done!</h1>
+      <p class="sub">Nice work.</p>
+      <button id="restart-btn">Restart</button>
+    </div>
+
+    <script>
+      const EXERCISES = [
+        "Jumping Jacks",
+        "Wall Sit",
+        "Push-Ups",
+        "Abdominal Crunches",
+      ];
+      const WORK_SECONDS = 30;
+      const REST_SECONDS = 10;
+
+      // Build a flat sequence of {type, label, next, seconds} steps: work, rest, work, rest, ... work.
+      const sequence = [
+        {
+          type: "rest",
+          label: "Get Ready!",
+          next: EXERCISES[0],
+          seconds: REST_SECONDS,
+        },
+      ];
+
+      EXERCISES.forEach((name, i) => {
+        sequence.push({ type: "work", label: name, seconds: WORK_SECONDS });
+        if (i < EXERCISES.length - 1) {
+          sequence.push({
+            type: "rest",
+            label: "Rest",
+            next: EXERCISES[i + 1],
+            seconds: REST_SECONDS,
+          });
+        }
+      });
+
+      const startScreen = document.getElementById("start-screen");
+      const workoutScreen = document.getElementById("workout-screen");
+      const doneScreen = document.getElementById("done-screen");
+      const phaseEl = document.getElementById("phase");
+      const exerciseEl = document.getElementById("exercise");
+      const nextEl = document.getElementById("next");
+      const timeEl = document.getElementById("time");
+
+      let stepIndex = 0;
+      let secondsLeft = 0;
+      let timerId = null;
+
+      function renderStep() {
+        const step = sequence[stepIndex];
+        phaseEl.textContent = step.type === "work" ? "Go" : "Rest";
+        phaseEl.className = step.type;
+        exerciseEl.textContent = step.label;
+        nextEl.textContent = step.type === "rest" ? "Next: " + step.next : "";
+        timeEl.textContent = secondsLeft;
+      }
+
+      function tick() {
+        secondsLeft--;
+        if (secondsLeft < 0) {
+          stepIndex++;
+          if (stepIndex >= sequence.length) {
+            finish();
+            return;
+          }
+          secondsLeft = sequence[stepIndex].seconds;
+        }
+        renderStep();
+      }
+
+      function start() {
+        startScreen.style.display = "none";
+        doneScreen.style.display = "none";
+        workoutScreen.style.display = "flex";
+        stepIndex = 0;
+        secondsLeft = sequence[0].seconds;
+        renderStep();
+        timerId = setInterval(tick, 1000);
+      }
+
+      function finish() {
+        clearInterval(timerId);
+        workoutScreen.style.display = "none";
+        doneScreen.style.display = "flex";
+      }
+
+      document.getElementById("start-btn").addEventListener("click", start);
+      document.getElementById("restart-btn").addEventListener("click", start);
+    </script>
+  </body>
+</html>
