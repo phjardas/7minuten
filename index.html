@@ -101,7 +101,6 @@
   <body>
     <div id="start-screen">
       <h1>7 Minuten</h1>
-      <p class="sub">4 exercises &middot; 30s work &middot; 10s rest</p>
       <button id="start-btn">Start</button>
     </div>
 
@@ -124,9 +123,18 @@
         "Wall Sit",
         "Push-Ups",
         "Abdominal Crunches",
+        "Step-Up onto Chair",
+        "Squats",
+        "Tricep Dips",
+        "Plank",
+        "High Stepping",
+        "Lunges",
+        "Push-Up and Rotation",
+        "Side Plank right",
+        "Side Plank left",
       ];
-      const WORK_SECONDS = 10;
-      const REST_SECONDS = 5;
+      const WORK_SECONDS = 30;
+      const REST_SECONDS = 10;
 
       // Build a flat sequence of {type, label, next, seconds} steps: work, rest, work, rest, ... work.
       const sequence = [
